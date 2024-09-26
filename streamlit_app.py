@@ -12,10 +12,12 @@ def load_data(file_path):
     return pd.DataFrame(data)
 
 # Load the data based on user choice
-file_choice = st.sidebar.selectbox("Choose File", ["cot_from_prm800", "deepseek-math-7b-base-sft-result"])
+file_choice = st.sidebar.selectbox("Choose File", ["cot_from_prm800_with_attempts_limitation", "cot_from_prm800", "deepseek-math-7b-base-sft-result"])
 
-if file_choice == "cot_from_prm800":
+if file_choice == "cot_from_prm800_with_attempts_limitation":
     df = load_data('data/prm800k_cot_from_tree_train_678_max_total_attempts_3.json')
+elif file_choice == "cot_from_prm800":
+    df = load_data('data/prm800k_cot_from_tree_train_678.json')
 else:
     df = load_data('data/deepseek-math-7b-base-sft-math-shortcut-epoch1-DATASET-MATH-longCOT-max-total-attempts-3-LR-2e-5-BS-128_eval_math_test.jsonl')
 
@@ -53,7 +55,7 @@ row = df.iloc[st.session_state.selected_example - 1]
 st.header(f"Example {st.session_state.selected_example}")
 
 # Adjusted to show the relevant keys based on the selected file
-if file_choice == "cot_from_prm800":
+if file_choice.startswith("cot_from_prm800"):
     # Display the selected example
     st.subheader("Question")
     st.markdown(row['question'].replace("\n", "<br>"), unsafe_allow_html=True)
