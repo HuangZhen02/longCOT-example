@@ -40,6 +40,7 @@ selected_level = st.sidebar.selectbox("Select Difficulty Level", [1, 2, 3, 4, 5]
 
 # Sidebar for example selection based on difficulty level
 example_options = difficulty_levels[selected_level]
+
 selected_example = st.sidebar.selectbox("Select Example", example_options)
 
 # Update session state based on dropdown selection
@@ -104,8 +105,8 @@ else:
     st.write(row['result'])
 
 # Next Example button
-if st.button("Next Example"):
-    if st.session_state.selected_example < len(df):
-        st.session_state.selected_example += 1
-    else:
-        st.warning("This is the last example.")
+# if st.button("Next Example"):
+#     if st.session_state.selected_example < len(df):
+#         st.session_state.selected_example += 1
+#     else:
+#         st.warning("This is the last example.")
