@@ -38,9 +38,9 @@ def visualize_prm_800k():
                     return correct_count / overall_count
                             
                 accuracy_list = []
-                for file in os.listdir('./data/SFT_results/'):
+                for file in os.listdir('./data/sft_results/'):
                     if file.endswith('.jsonl'):
-                        file_path = os.path.join('./data/SFT_results/', file)
+                        file_path = os.path.join('./data/sft_results/', file)
                         result_df = load_data(file_path)
                         accuracy = calculate_overall_accuracy(result_df)
                         # 将文件名和准确率存入列表
@@ -54,10 +54,10 @@ def visualize_prm_800k():
         
         file_choice = st.multiselect("Choose 1 or 2 Files", [os.path.splitext(file)[0] for file in os.listdir('./data/SFT_results/') if file.endswith('.jsonl')], max_selections=2)
         if len(file_choice) == 1:
-            df = load_data(f'data/SFT_results/{file_choice[0]}.jsonl')
+            df = load_data(f'data/sft_results/{file_choice[0]}.jsonl')
         elif len(file_choice) == 2:
-            df = load_data(f'data/SFT_results/{file_choice[0]}.jsonl')
-            df_compare = load_data(f'data/SFT_results/{file_choice[1]}.jsonl')
+            df = load_data(f'data/sft_results/{file_choice[0]}.jsonl')
+            df_compare = load_data(f'data/sft_results/{file_choice[1]}.jsonl')
         else:
             st.warning("Please select at least 1 file to continue.")
             st.stop()
