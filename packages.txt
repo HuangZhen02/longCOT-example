@@ -1,4 +1,2 @@
 graphviz
 graphviz-dev
-libgraphviz-dev
-pkg-config
