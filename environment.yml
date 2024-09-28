@@ -1,9 +1,0 @@
-name: myenv
-channels:
-  - conda-forge
-dependencies:
-  - python=3.10  # 你使用的 Python 版本
-  - pygraphviz
-  - pip
-  - pip:
-      - -r requirements.txt  # 告诉 conda 使用 pip 来安装 requirements.txt 里的其他依赖
