@@ -1,5 +1,4 @@
 graphviz
+graphviz-dev
 libgraphviz-dev
 pkg-config
-python-pip
-python-virtualenv
