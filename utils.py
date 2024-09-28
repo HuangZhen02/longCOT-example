@@ -5,7 +5,6 @@ import re
 import chardet
 import networkx as nx
 import matplotlib.pyplot as plt
-import textwrap
 from networkx.drawing.nx_agraph import graphviz_layout
 
 
