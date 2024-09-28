@@ -7,23 +7,66 @@ from utils import *
 
 def visualize_prm_800k():
     # Load the data based on user choice
-    file_choice = st.sidebar.selectbox("Choose File", ["longCoT", "longCoT_with_limitation_v1", "longCoT_with_limitation_v2", "deepseek-math-7b-base-sft-math-v1", "deepseek-math-7b-base-sft-math-v2"])
-
-    if file_choice == "longCoT_with_limitation_v1":
-        df = load_data('data/prm800k_cot_from_tree_train_678_max_total_attempts_3.json')
-    elif file_choice == "longCoT_with_limitation_v2":
-        df = load_data('data/prm800k_cot_from_tree_train_678_max_total_attempts_3_max_attempts_2_v2.json')
-    elif file_choice == "longCoT":
-        df = load_data('data/prm800k_cot_from_tree_train_678.json')
-    elif file_choice == "deepseek-math-7b-base-sft-math-v1":
-        df = load_data('data/deepseek-math-7b-base-sft-math-v1.jsonl')
-    elif file_choice == "deepseek-math-7b-base-sft-math-v2":
-        df = load_data('data/deepseek-math-7b-base-sft-math-v2.jsonl')
+    
+    file_type = st.sidebar.selectbox("Choose File Type", ["Synthetic longCoT", "SFT Results"])
+    
+    if file_type == "Synthetic longCoT":
+        file_choice = st.multiselect("Choose 1 or 2 Files", [os.path.splitext(file)[0] for file in os.listdir('./data/longCoT_from_prm800k/') if file.endswith('.json')], max_selections=2)
+        if len(file_choice) == 1:    
+            df = load_data(f'data/longCoT_from_prm800k/{file_choice[0]}.json')
+        elif len(file_choice) == 2:
+            df = load_data(f'data/longCoT_from_prm800k/{file_choice[0]}.json')
+            df_compare = load_data(f'data/longCoT_from_prm800k/{file_choice[1]}.json')
+        else:
+            st.warning("Please select at least 1 file to continue.")
+            st.stop()
+            
+        trees = read_json('data/prm800k_tree_train_678.json')
         
-    trees = read_json('data/prm800k_tree_train_678.json')
+    elif file_type == "SFT Results":
+        with st.sidebar:
+            show_baseline = st.checkbox("Show Baseline")
+            if show_baseline:
+                
+                def calculate_overall_accuracy(df):
+                    overall_count = 0
+                    correct_count = 0
+                    for index, row in df.iterrows():
+                        overall_count += 1
+                        if row['result']:
+                            correct_count += 1
+                    return correct_count / overall_count
+                            
+                accuracy_list = []
+                for file in os.listdir('./data/SFT_results/'):
+                    if file.endswith('.jsonl'):
+                        file_path = os.path.join('./data/SFT_results/', file)
+                        result_df = load_data(file_path)
+                        accuracy = calculate_overall_accuracy(result_df)
+                        # 将文件名和准确率存入列表
+                        accuracy_list.append((os.path.splitext(file)[0], accuracy))
+
+                accuracy_list.sort(key=lambda x: x[1])
+
+                for file_name, accuracy in accuracy_list:
+                    st.write(f"{file_name}: {accuracy}")
+                
+        
+        file_choice = st.multiselect("Choose 1 or 2 Files", [os.path.splitext(file)[0] for file in os.listdir('./data/SFT_results/') if file.endswith('.jsonl')], max_selections=2)
+        if len(file_choice) == 1:
+            df = load_data(f'data/SFT_results/{file_choice[0]}.jsonl')
+        elif len(file_choice) == 2:
+            df = load_data(f'data/SFT_results/{file_choice[0]}.jsonl')
+            df_compare = load_data(f'data/SFT_results/{file_choice[1]}.jsonl')
+        else:
+            st.warning("Please select at least 1 file to continue.")
+            st.stop()
+            
+        
 
     if 'selected_example' not in st.session_state:
         st.session_state.selected_example = 1
+
 
     # Create a dictionary to hold examples by difficulty level
     difficulty_levels = {1: [], 2: [], 3: [], 4: [], 5: []}
@@ -41,7 +84,12 @@ def visualize_prm_800k():
     st.session_state.selected_example = selected_example
     
     row = df.iloc[st.session_state.selected_example - 1]
-    current_tree = trees[st.session_state.selected_example - 1]
+    
+    if len(file_choice) == 2:
+        row_compare = df_compare.iloc[st.session_state.selected_example - 1]
+        
+
+    
 
     idx_col, subject_col, difficulty_col = st.columns(3)
     
@@ -59,9 +107,10 @@ def visualize_prm_800k():
     st.markdown(row['gt_solution'].replace("\n", "<br>"), unsafe_allow_html=True)
             
     
-    if file_choice.startswith("longCoT"): # sythetic longCoT
+    if file_type == "Synthetic longCoT": # sythetic longCoT
         st.subheader("Tree Structure")
         show_tree = st.checkbox("Show Tree Structure")
+        current_tree = trees[st.session_state.selected_example - 1]
         if show_tree:
             tree_col, step_col = st.columns([6, 4])
             with tree_col:
@@ -80,15 +129,41 @@ def visualize_prm_800k():
         st.subheader("Shortcut CoT")
         st.markdown(row['shortCOT'].replace("\n", "<br>"), unsafe_allow_html=True)
         
-        st.subheader("Long CoT")
-        highlighted_long_cot = highlight_wait(row['longCOT'].replace("\n", "<br>"))
-        st.markdown(highlighted_long_cot, unsafe_allow_html=True)
+        
+        st.subheader("Synthetic Long CoT")
+        
+        def show_long_cot(row, version):
+            st.subheader(f"**LongCoT-{version}**")
+            highlighted_long_cot = highlight_wait(row['longCOT'].replace("\n", "<br>"))
+            st.markdown(highlighted_long_cot, unsafe_allow_html=True)
+        
+        if len(file_choice) == 2:
+            left, right = st.columns(2)
+            with left:
+                show_long_cot(row, file_choice[0])
+            with right:
+                show_long_cot(row_compare, file_choice[1])
+        elif len(file_choice) == 1:
+            show_long_cot(row, file_choice[0])
     
-    elif file_choice.startswith("deepseek-math-7b-base-sft"):
-        if row['result']:
-            st.subheader("Pred Solution of the model ✅")
-        else:
-            st.subheader("Pred Solution of the model ❌")
+    elif file_type == "SFT Results":
+        
+        def show_pred_result(row, model_name):
+            if row['result']:
+                st.subheader(f"Pred of {model_name} ✅")
+            else:
+                st.subheader(f"Pred of {model_name} ❌")
+                
+            highlighted_response = highlight_wait(row['response'].replace("\n", "<br>"))
+            st.markdown(highlighted_response, unsafe_allow_html=True)
             
-        highlighted_response = highlight_wait(row['response'].replace("\n", "<br>"))
-        st.markdown(highlighted_response, unsafe_allow_html=True)
+        
+        if len(file_choice) == 2:
+            left, right = st.columns(2)
+            with left:
+                show_pred_result(row, file_choice[0])
+            with right:
+                show_pred_result(row_compare, file_choice[1])
+        
+        elif len(file_choice) == 1:
+            show_pred_result(row, file_choice[0])
