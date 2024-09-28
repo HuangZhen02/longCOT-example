@@ -6,6 +6,7 @@ from utils import *
 from prm_800k import visualize_prm_800k
 
 
+st.set_page_config(layout="wide")
 # choose the type of tree
 tree_type = st.sidebar.selectbox("Choose Tree Type", ["PRM800k-based", "Teacher-student-based", "Teacher-only-based"])
 

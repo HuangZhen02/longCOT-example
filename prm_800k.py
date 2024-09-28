@@ -19,6 +19,8 @@ def visualize_prm_800k():
         df = load_data('data/deepseek-math-7b-base-sft-math-v1.jsonl')
     elif file_choice == "deepseek-math-7b-base-sft-math-v2":
         df = load_data('data/deepseek-math-7b-base-sft-math-v2.jsonl')
+        
+    trees = read_json('data/prm800k_tree_train_678.json')
 
     if 'selected_example' not in st.session_state:
         st.session_state.selected_example = 1
@@ -39,6 +41,7 @@ def visualize_prm_800k():
     st.session_state.selected_example = selected_example
     
     row = df.iloc[st.session_state.selected_example - 1]
+    current_tree = trees[st.session_state.selected_example - 1]
 
     idx_col, subject_col, difficulty_col = st.columns(3)
     
@@ -54,9 +57,26 @@ def visualize_prm_800k():
     
     st.subheader("Gold Solution")
     st.markdown(row['gt_solution'].replace("\n", "<br>"), unsafe_allow_html=True)
-    
+            
     
     if file_choice.startswith("longCoT"): # sythetic longCoT
+        st.subheader("Tree Structure")
+        show_tree = st.checkbox("Show Tree Structure")
+        if show_tree:
+            tree_col, step_col = st.columns([6, 4])
+            with tree_col:
+                visualize_tree(current_tree['solution'])
+            with step_col:
+                level = st.number_input("Select tree level", min_value=0, value=0)
+                
+                steps_at_level = get_steps_at_level(current_tree['solution'], level)
+
+                st.subheader(f"Steps at level {level}")
+                for path, step in steps_at_level:
+                    text = f"**{path}:** {step}"
+                    st.write(text.replace("\n", "<br>"), unsafe_allow_html=True)
+                    
+                    
         st.subheader("Shortcut CoT")
         st.markdown(row['shortCOT'].replace("\n", "<br>"), unsafe_allow_html=True)
         
