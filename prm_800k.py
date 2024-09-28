@@ -7,7 +7,7 @@ from utils import *
 
 def visualize_prm_800k():
     # Load the data based on user choice
-    file_choice = st.sidebar.selectbox("Choose File", ["longCoT", "longCoT_with_limitation_v1", "longCoT_with_limitation_v2", "Deepseek-math-7b-base-sft-result"])
+    file_choice = st.sidebar.selectbox("Choose File", ["longCoT", "longCoT_with_limitation_v1", "longCoT_with_limitation_v2", "deepseek-math-7b-base-sft-math-v1", "deepseek-math-7b-base-sft-math-v2"])
 
     if file_choice == "longCoT_with_limitation_v1":
         df = load_data('data/prm800k_cot_from_tree_train_678_max_total_attempts_3.json')
@@ -15,8 +15,10 @@ def visualize_prm_800k():
         df = load_data('data/prm800k_cot_from_tree_train_678_max_total_attempts_3_max_attempts_2_v2.json')
     elif file_choice == "longCoT":
         df = load_data('data/prm800k_cot_from_tree_train_678.json')
-    elif file_choice == "Deepseek-math-7b-base-sft-result":
-        df = load_data('data/deepseek-math-7b-base-sft-math-shortcut-epoch1-DATASET-MATH-longCOT-max-total-attempts-3-LR-2e-5-BS-128_eval_math_test.jsonl')
+    elif file_choice == "deepseek-math-7b-base-sft-math-v1":
+        df = load_data('data/deepseek-math-7b-base-sft-math-v1.jsonl')
+    elif file_choice == "deepseek-math-7b-base-sft-math-v2":
+        df = load_data('data/deepseek-math-7b-base-sft-math-v2.jsonl')
 
     if 'selected_example' not in st.session_state:
         st.session_state.selected_example = 1
@@ -62,7 +64,7 @@ def visualize_prm_800k():
         highlighted_long_cot = highlight_wait(row['longCOT'].replace("\n", "<br>"))
         st.markdown(highlighted_long_cot, unsafe_allow_html=True)
     
-    elif file_choice.startswith("Deepseek-math-7b-base-sft-result"):
+    elif file_choice.startswith("deepseek-math-7b-base-sft"):
         if row['result']:
             st.subheader("Pred Solution of the model ✅")
         else:
