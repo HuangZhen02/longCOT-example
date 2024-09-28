@@ -2,4 +2,3 @@ streamlit
 chardet
 networkx
 matplotlib
-pygraphviz
