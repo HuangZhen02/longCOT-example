@@ -52,7 +52,7 @@ def visualize_prm_800k():
                     st.write(f"{file_name}: {accuracy}")
                 
         
-        file_choice = st.multiselect("Choose 1 or 2 Files", [os.path.splitext(file)[0] for file in os.listdir('./data/SFT_results/') if file.endswith('.jsonl')], max_selections=2)
+        file_choice = st.multiselect("Choose 1 or 2 Files", [os.path.splitext(file)[0] for file in os.listdir('./data/sft_results/') if file.endswith('.jsonl')], max_selections=2)
         if len(file_choice) == 1:
             df = load_data(f'data/sft_results/{file_choice[0]}.jsonl')
         elif len(file_choice) == 2:

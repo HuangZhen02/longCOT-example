@@ -129,6 +129,8 @@ def draw_tree(graph):
             node_colors.append("lightgreen")  # 如果 is_correct 为 True，则颜色为 lightgreen
         elif graph.nodes[node]["rating"] == -1:
             node_colors.append("lightcoral")  # 如果 rating 为 -1，则颜色为 lightcoral（相当于 lightred）
+        elif graph.nodes[node]["rating"] == 0:
+            node_colors.append("lightyellow")
         else:
             node_colors.append("skyblue")  # 否则颜色为 skyblue
 
