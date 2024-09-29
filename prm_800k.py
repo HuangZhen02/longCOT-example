@@ -11,16 +11,12 @@ correctness_map = {
     "None": "None"
 }
 
-def display_baseline(sft_dir):
-    def calculate_overall_accuracy(df):
-        overall_count = 0
-        correct_count = 0
-        for index, row in df.iterrows():
-            overall_count += 1
-            if row['result']:
-                correct_count += 1
-        return correct_count / overall_count
+def calculate_overall_accuracy(df):
+    correct_count = df['result'].sum()
+    overall_count = len(df)
+    return correct_count / overall_count if overall_count > 0 else 0
 
+def display_baseline(sft_dir):
     accuracy_list = []
     for file in os.listdir(sft_dir):
         if file.endswith('.jsonl'):
@@ -29,12 +25,7 @@ def display_baseline(sft_dir):
             accuracy = calculate_overall_accuracy(result_df)
             accuracy_list.append((os.path.splitext(file)[0], accuracy))
 
-    # 将结果转换为 DataFrame
-    accuracy_df = pd.DataFrame(accuracy_list, columns=['File Name', 'Accuracy'])
-
-    # 按准确率排序
-    accuracy_df = accuracy_df.sort_values(by='Accuracy', ascending=True)
-    accuracy_df = accuracy_df.reset_index(drop=True)
+    accuracy_df = pd.DataFrame(accuracy_list, columns=['File Name', 'Accuracy']).sort_values(by='Accuracy').reset_index(drop=True)
     
     st.dataframe(accuracy_df)
         
@@ -51,7 +42,6 @@ def filter_correct_problems_1(df):
             matching_indices.append(idx)
     filtered_df = df.loc[matching_indices]
     return filtered_df
-
 
 def filter_correct_problems_2(df1, df2):
     left, right = st.columns(2)
@@ -77,6 +67,52 @@ def filter_correct_problems_2(df1, df2):
     
     return filtered_df1, filtered_df2
 
+
+def filter_wait_statement_1(df, key="response"):
+    wait_flag = st.selectbox("Whether there is a wait statement", ["None", "✅", "❌"])
+    
+    if wait_flag == "None":
+        return df
+    
+    matching_indices = []
+    for idx in df.index:
+        if ("wait," in df.at[idx, key].lower()) == correctness_map[wait_flag]:
+            matching_indices.append(idx)
+    filtered_df = df.loc[matching_indices]
+    return filtered_df
+    
+def filter_wait_statement_2(df1, df2, key="response"):
+    left, right = st.columns(2)
+    with left:
+        wait_flag1 = st.selectbox("Whether there is a wait statement in the first file", ["None", "✅", "❌"])
+    with right:
+        wait_flag2 = st.selectbox("Whether there is a wait statement in the second file", ["None", "✅", "❌"])
+        
+    matching_indices = []
+    
+    for idx in df1.index:
+        assert df1.at[idx, 'id'] == df2.at[idx, 'id']
+        
+        response1 = df1.at[idx, key].lower()
+        response2 = df2.at[idx, key].lower()
+        
+        has_wait1 = "wait," in response1
+        has_wait2 = "wait," in response2
+
+        flag1 = correctness_map[wait_flag1]
+        flag2 = correctness_map[wait_flag2]
+
+        is_valid1 = (flag1 == "None" or has_wait1 == flag1)
+        is_valid2 = (flag2 == "None" or has_wait2 == flag2)
+        
+        if is_valid1 and is_valid2:
+            matching_indices.append(idx)
+    
+    filtered_df1 = df1.loc[matching_indices]
+    filtered_df2 = df2.loc[matching_indices]
+    
+    return filtered_df1, filtered_df2
+        
 
 
 def visualize_prm_800k():
@@ -105,19 +141,24 @@ def visualize_prm_800k():
                 
         file_choice = st.multiselect("Choose 1 or 2 Files", [os.path.splitext(file)[0] for file in os.listdir('./data/sft_results/') if file.endswith('.jsonl')], max_selections=2)
         
-        st.subheader("Filtering")
+        st.subheader('Filtering ("None" means no filtering)')
         
         if len(file_choice) == 1:
             df = load_data(f'data/sft_results/{file_choice[0]}.jsonl')
             df = filter_correct_problems_1(df)
+            df = filter_wait_statement_1(df)
         elif len(file_choice) == 2:
             df = load_data(f'data/sft_results/{file_choice[0]}.jsonl')
             df_compare = load_data(f'data/sft_results/{file_choice[1]}.jsonl')
             df, df_compare = filter_correct_problems_2(df, df_compare)
+            df, df_compare = filter_wait_statement_2(df, df_compare)
         else:
             st.warning("Please select at least 1 file to continue.")
             st.stop()
             
+    if df.empty:
+        st.warning("No data available to display.")
+        st.stop()
 
     if 'selected_example' not in st.session_state:
         st.session_state.selected_example = 1
@@ -133,6 +174,9 @@ def visualize_prm_800k():
         selected_level = st.selectbox("Select Difficulty Level", [1, 2, 3, 4, 5])
     with example:
         example_options = difficulty_levels[selected_level]
+        if len(example_options) == 0:
+            st.warning("No examples available for the selected difficulty level.")
+            st.stop()
         selected_example = st.selectbox("Select Example", example_options)
 
 
@@ -197,9 +241,9 @@ def visualize_prm_800k():
         
         if len(file_choice) == 2:
             left, right = st.columns(2)
-            with left:
+            with left.container(height=800):
                 show_long_cot(row, file_choice[0])
-            with right:
+            with right.container(height=800):
                 show_long_cot(row_compare, file_choice[1])
         elif len(file_choice) == 1:
             show_long_cot(row, file_choice[0])
@@ -215,12 +259,13 @@ def visualize_prm_800k():
             highlighted_response = highlight_wait(row['response'].replace("\n", "<br>"))
             st.markdown(highlighted_response, unsafe_allow_html=True)
             
+        st.subheader("Model's Prediction")
         
         if len(file_choice) == 2:
             left, right = st.columns(2)
-            with left:
+            with left.container(height=800):
                 show_pred_result(row, file_choice[0])
-            with right:
+            with right.container(height=800):
                 show_pred_result(row_compare, file_choice[1])
         
         elif len(file_choice) == 1:
