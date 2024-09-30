@@ -7,9 +7,6 @@ from utils import *
 
 
 def visualize_teacher_student():
-    
-
-
     folder_path = "./data/teacher_student_based/"
 
     with open(os.path.join(folder_path, "evaluated_problem_trees3.json"), "r") as f:
@@ -17,7 +14,7 @@ def visualize_teacher_student():
         
     selected_example = st.sidebar.selectbox("Choose Example", [f"Example{idx+1}" for idx, _ in enumerate(data)])
 
-    idx = int(selected_example[7:])
+    idx = int(selected_example[7:]) - 1
     example = data[idx]
 
     st.subheader(f"Example{idx}")
