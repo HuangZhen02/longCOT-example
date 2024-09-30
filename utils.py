@@ -39,7 +39,12 @@ def highlight_wait(text):
 # 递归生成树的节点和边
 def add_edges(graph, data, parent=None):
     node_label = data["name"]
-    graph.add_node(node_label, is_correct=data.get("is_correct", False), rating=data.get("rating", -1))  # 添加节点
+    graph.add_node(
+        node_label, 
+        is_correct=data.get("is_correct", False), 
+        rating=data.get("rating", -1),
+        reward_conflict=data.get("reward_conflict", False)
+    )  # 添加节点
     
     if parent:
         graph.add_edge(parent, node_label)  # 添加从父节点到当前节点的边
@@ -55,6 +60,8 @@ def draw_tree(graph):
     plt.figure(figsize=(10, 10))
 
     node_colors = []
+    edge_colors = []
+    
     for node in graph.nodes():
         if graph.nodes[node]["is_correct"]:
             node_colors.append("lightgreen")  # 如果 is_correct 为 True，则颜色为 lightgreen
@@ -64,10 +71,16 @@ def draw_tree(graph):
             node_colors.append("lightyellow")
         else:
             node_colors.append("skyblue")  # 否则颜色为 skyblue
+            
+            
+        if graph.nodes[node]["reward_conflict"]:
+            edge_colors.append("red")
+        else:
+            edge_colors.append("black")
 
     # 绘制节点和边
     nx.draw_networkx_edges(graph, pos)
-    nx.draw_networkx_nodes(graph, pos, node_color=node_colors, node_size=500, node_shape='o')
+    nx.draw_networkx_nodes(graph, pos, node_color=node_colors, edgecolors=edge_colors, node_size=500, node_shape='o')
     
     # 在节点上显示标签
     nx.draw_networkx_labels(graph, pos, font_size=6, font_weight='bold')
@@ -87,7 +100,7 @@ def visualize_tree(solution):
 def get_steps_at_level(node, level):
     if level == 0:
         # 如果是目标层，返回该节点的 name 和 step
-        return [(node['name'], node['step'])]
+        return [node]
     else:
         # 否则递归遍历其子节点
         steps = []

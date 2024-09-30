@@ -121,36 +121,40 @@ def visualize_prm_800k():
     file_type = st.sidebar.selectbox("Choose File Type", ["Synthetic longCoT", "SFT Results"])
     
     if file_type == "Synthetic longCoT":
-        file_choice = st.multiselect("Choose 1 or 2 Files", [os.path.splitext(file)[0] for file in os.listdir('./data/longCoT_from_prm800k/') if file.endswith('.json')], max_selections=2)
+        
+        folder_path = "./data/prm_800k_based/longCoT_from_prm800k"
+        
+        file_choice = st.multiselect("Choose 1 or 2 Files", [os.path.splitext(file)[0] for file in os.listdir(folder_path) if file.endswith('.json')], max_selections=2)
         
         if len(file_choice) == 1:    
-            df = load_data(f'data/longCoT_from_prm800k/{file_choice[0]}.json')
+            df = load_data(os.path.join(folder_path, f'{file_choice[0]}.json'))
         elif len(file_choice) == 2:
-            df = load_data(f'data/longCoT_from_prm800k/{file_choice[0]}.json')
-            df_compare = load_data(f'data/longCoT_from_prm800k/{file_choice[1]}.json')
+            df = load_data(os.path.join(folder_path, f'{file_choice[0]}.json'))
+            df_compare = load_data(os.path.join(folder_path, f'{file_choice[1]}.json'))
         else:
             st.warning("Please select at least 1 file to continue.")
             st.stop()
             
-        trees = read_json('data/prm800k_tree_train_678.json')
+        trees = read_json("./data/prm_800k_based/prm800k_tree_train_678.json")
         
         
     elif file_type == "SFT Results":
+        folder_path = './data/prm_800k_based/sft_results'
         show_baseline = st.checkbox("Show Baseline")
         if show_baseline:
-            display_baseline('./data/sft_results')
+            display_baseline(folder_path)
                 
-        file_choice = st.multiselect("Choose 1 or 2 Files", [os.path.splitext(file)[0] for file in os.listdir('./data/sft_results/') if file.endswith('.jsonl')], max_selections=2)
+        file_choice = st.multiselect("Choose 1 or 2 Files", [os.path.splitext(file)[0] for file in os.listdir(folder_path) if file.endswith('.jsonl')], max_selections=2)
         
         st.subheader('Filtering ("None" means no filtering)')
         
         if len(file_choice) == 1:
-            df = load_data(f'data/sft_results/{file_choice[0]}.jsonl')
+            df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
             df = filter_correct_problems_1(df)
             df = filter_wait_statement_1(df)
         elif len(file_choice) == 2:
-            df = load_data(f'data/sft_results/{file_choice[0]}.jsonl')
-            df_compare = load_data(f'data/sft_results/{file_choice[1]}.jsonl')
+            df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
+            df_compare = load_data(os.path.join(folder_path, f'{file_choice[1]}.jsonl'))
             df, df_compare = filter_correct_problems_2(df, df_compare)
             df, df_compare = filter_wait_statement_2(df, df_compare)
         else:
@@ -216,19 +220,19 @@ def visualize_prm_800k():
     if file_type == "Synthetic longCoT": # sythetic longCoT
         st.subheader("Tree Structure")
         show_tree = st.checkbox("Show Tree Structure")
-        current_tree = trees[st.session_state.selected_example - 1]
+        current_example = trees[st.session_state.selected_example - 1]
         if show_tree:
             tree_col, step_col = st.columns([6, 4])
             with tree_col:
-                visualize_tree(current_tree['solution'])
+                visualize_tree(current_example['solution'])
             with step_col:
                 level = st.number_input("Select tree level", min_value=0, value=0)
                 
-                steps_at_level = get_steps_at_level(current_tree['solution'], level)
+                steps_at_level = get_steps_at_level(current_example['solution'], level)
 
                 st.subheader(f"Steps at level {level}")
-                for path, step in steps_at_level:
-                    text = f"**{path}:** {step}"
+                for node in steps_at_level:
+                    text = f"**{node['name']}:**\n{node['step']}"
                     st.write(text.replace("\n", "<br>"), unsafe_allow_html=True)
                     
                     
