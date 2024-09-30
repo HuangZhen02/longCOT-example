@@ -29,12 +29,12 @@ def visualize_teacher_student():
         with tree_col:
             visualize_tree(example['solution'])
         with step_col:
-            level = st.number_input("Select tree level", min_value=0, value=0)
-            
-            steps_at_level = get_steps_at_level(example['solution'], level)
+
+            steps_at_level = collect_steps_by_level(example['solution'])
+            level = st.number_input("Select tree level", min_value=0, value=0, max_value=max(steps_at_level.keys()))
 
             st.subheader(f"Steps at level {level}")
-            for node in steps_at_level:
+            for node in steps_at_level[level]:
                 reward_text = f"{node['reward']:.2f}"
 
                 text = f"**{node['name']}:**\n**reward: {reward_text}**\n{node['step']}"

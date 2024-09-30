@@ -63,8 +63,10 @@ def draw_tree(graph):
     edge_colors = []
     
     for node in graph.nodes():
-        if graph.nodes[node]["is_correct"]:
+        if graph.nodes[node]["is_correct"] == True:
             node_colors.append("lightgreen")  # 如果 is_correct 为 True，则颜色为 lightgreen
+        elif graph.nodes[node]["rating"] == 1:
+            node_colors.append("lightgreen")
         elif graph.nodes[node]["rating"] == -1:
             node_colors.append("lightcoral")  # 如果 rating 为 -1，则颜色为 lightcoral（相当于 lightred）
         elif graph.nodes[node]["rating"] == 0:
@@ -96,14 +98,16 @@ def visualize_tree(solution):
     draw_tree(G)  # 可视化树
 
 
+def collect_steps_by_level(node, level=0, level_dict=None):
+    if level_dict is None:
+        level_dict = {}
 
-def get_steps_at_level(node, level):
-    if level == 0:
-        # 如果是目标层，返回该节点的 name 和 step
-        return [node]
-    else:
-        # 否则递归遍历其子节点
-        steps = []
-        for child in node.get('children', []):
-            steps.extend(get_steps_at_level(child, level - 1))
-        return steps
+    if level not in level_dict:
+        level_dict[level] = []
+
+    level_dict[level].append(node)
+
+    for child in node.get('children', []):
+        collect_steps_by_level(child, level + 1, level_dict)
+
+    return level_dict
