@@ -122,6 +122,7 @@ def visualize_prm_800k():
     
     if file_type == "Synthetic longCoT":
         file_choice = st.multiselect("Choose 1 or 2 Files", [os.path.splitext(file)[0] for file in os.listdir('./data/longCoT_from_prm800k/') if file.endswith('.json')], max_selections=2)
+        
         if len(file_choice) == 1:    
             df = load_data(f'data/longCoT_from_prm800k/{file_choice[0]}.json')
         elif len(file_choice) == 2:
@@ -156,6 +157,8 @@ def visualize_prm_800k():
             st.warning("Please select at least 1 file to continue.")
             st.stop()
             
+    count_after_filter = len(df)
+            
     if df.empty:
         st.warning("No data available to display.")
         st.stop()
@@ -168,16 +171,17 @@ def visualize_prm_800k():
     for index, row in df.iterrows():
         difficulty_levels[row['level']].append(index + 1)
         
-    st.subheader("Select Example")
+    st.subheader(f"Select Example **(Count: {count_after_filter})**")
     difficulty, example = st.columns(2)
     with difficulty:
         selected_level = st.selectbox("Select Difficulty Level", [1, 2, 3, 4, 5])
     with example:
         example_options = difficulty_levels[selected_level]
-        if len(example_options) == 0:
+        count_at_difficulty = len(example_options)
+        if count_at_difficulty == 0:
             st.warning("No examples available for the selected difficulty level.")
             st.stop()
-        selected_example = st.selectbox("Select Example", example_options)
+        selected_example = st.selectbox(f"Select Example **(Count: {count_at_difficulty})**", example_options)
 
 
     st.session_state.selected_example = selected_example
