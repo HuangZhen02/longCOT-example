@@ -14,8 +14,8 @@ def visualize_teacher_student():
         
     selected_example = st.sidebar.selectbox("Choose Example", [f"Example{idx+1}" for idx, _ in enumerate(data)])
 
-    idx = int(selected_example[7:]) - 1
-    example = data[idx]
+    idx = int(selected_example[7:])
+    example = data[idx - 1]
 
     st.subheader(f"Example{idx}")
 
