@@ -27,10 +27,10 @@ def visualize_teacher_student():
     if show_tree:
         tree_col, step_col = st.columns([6, 4])
         with tree_col:
-            visualize_tree(example['solution'])
+            steps_at_level = visualize_tree(example['solution'])
         with step_col:
 
-            steps_at_level = collect_steps_by_level(example['solution'])
+            # steps_at_level = collect_steps_by_level(example['solution'])
             level = st.number_input("Select tree level", min_value=0, value=0, max_value=max(steps_at_level.keys()))
 
             st.subheader(f"Steps at level {level}")

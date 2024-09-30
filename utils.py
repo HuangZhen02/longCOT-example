@@ -36,8 +36,11 @@ def highlight_wait(text):
     return re.sub(r'(Wait,)', r'<span style="color: red; font-weight: bold;">\1</span>', text)
 
 
-# 递归生成树的节点和边
-def add_edges(graph, data, parent=None):
+def add_edges(graph, data, level_dict=None, level=0, parent=None):
+    # Initialize level_dict if not passed
+    if level_dict is None:
+        level_dict = {}
+
     node_label = data["name"]
     graph.add_node(
         node_label, 
@@ -45,12 +48,20 @@ def add_edges(graph, data, parent=None):
         rating=data.get("rating", -1),
         reward_conflict=data.get("reward_conflict", False)
     )  # 添加节点
-    
+
+    # Collect the node in the level_dict based on the current level
+    if level not in level_dict:
+        level_dict[level] = []
+    level_dict[level].append(data)
+
     if parent:
         graph.add_edge(parent, node_label)  # 添加从父节点到当前节点的边
     
-    for child in data.get("children", []):
-        add_edges(graph, child, node_label)
+    # Recursively process the children
+    for child in data.get('children', []):
+        add_edges(graph, child, level_dict, level + 1, node_label)
+
+    return level_dict
 
 # 自定义节点颜色和大小
 def draw_tree(graph):
@@ -94,20 +105,21 @@ def draw_tree(graph):
 
 def visualize_tree(solution):
     G = nx.DiGraph()  # 创建一个有向图
-    add_edges(G, solution)  # 添加节点和边
+    levels_dict = add_edges(G, solution)  # 添加节点和边
     draw_tree(G)  # 可视化树
+    return levels_dict
 
 
-def collect_steps_by_level(node, level=0, level_dict=None):
-    if level_dict is None:
-        level_dict = {}
+# def collect_steps_by_level(node, level=0, level_dict=None):
+#     if level_dict is None:
+#         level_dict = {}
 
-    if level not in level_dict:
-        level_dict[level] = []
+#     if level not in level_dict:
+#         level_dict[level] = []
 
-    level_dict[level].append(node)
+#     level_dict[level].append(node)
 
-    for child in node.get('children', []):
-        collect_steps_by_level(child, level + 1, level_dict)
+#     for child in node.get('children', []):
+#         collect_steps_by_level(child, level + 1, level_dict)
 
-    return level_dict
+#     return level_dict
