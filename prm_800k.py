@@ -16,11 +16,11 @@ def calculate_overall_accuracy(df):
     overall_count = len(df)
     return correct_count / overall_count if overall_count > 0 else 0
 
-def display_baseline(sft_dir):
+def display_baseline(result_dir):
     accuracy_list = []
-    for file in os.listdir(sft_dir):
+    for file in os.listdir(result_dir):
         if file.endswith('.jsonl'):
-            file_path = os.path.join(sft_dir, file)
+            file_path = os.path.join(result_dir, file)
             result_df = load_data(file_path)
             accuracy = calculate_overall_accuracy(result_df)
             accuracy_list.append((os.path.splitext(file)[0], accuracy))
@@ -118,7 +118,7 @@ def filter_wait_statement_2(df1, df2, key="response"):
 def visualize_prm_800k():
     # Load the data based on user choice
     
-    file_type = st.sidebar.selectbox("Choose File Type", ["Synthetic longCoT", "SFT Results"])
+    file_type = st.sidebar.selectbox("Choose File Type", ["Synthetic longCoT", "Results"])
     
     if file_type == "Synthetic longCoT":
         
@@ -135,11 +135,12 @@ def visualize_prm_800k():
             st.warning("Please select at least 1 file to continue.")
             st.stop()
             
+        count_total = len(df)
         trees = read_json("./data/prm_800k_based/prm800k_tree_train_678.json")
         
         
-    elif file_type == "SFT Results":
-        folder_path = './data/prm_800k_based/sft_results'
+    elif file_type == "Results":
+        folder_path = './data/prm_800k_based/results'
         show_baseline = st.checkbox("Show Baseline")
         if show_baseline:
             display_baseline(folder_path)
@@ -150,10 +151,12 @@ def visualize_prm_800k():
         
         if len(file_choice) == 1:
             df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
+            count_total = len(df)
             df = filter_correct_problems_1(df)
             df = filter_wait_statement_1(df)
         elif len(file_choice) == 2:
             df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
+            count_total = len(df)
             df_compare = load_data(os.path.join(folder_path, f'{file_choice[1]}.jsonl'))
             df, df_compare = filter_correct_problems_2(df, df_compare)
             df, df_compare = filter_wait_statement_2(df, df_compare)
@@ -175,7 +178,7 @@ def visualize_prm_800k():
     for index, row in df.iterrows():
         difficulty_levels[row['level']].append(index + 1)
         
-    st.subheader(f"Select Example **(Count: {count_after_filter})**")
+    st.subheader(f"Select Example **(Count: {count_after_filter}/{count_total})**")
     difficulty, example = st.columns(2)
     with difficulty:
         selected_level = st.selectbox("Select Difficulty Level", [1, 2, 3, 4, 5])
@@ -195,7 +198,7 @@ def visualize_prm_800k():
         row = df[df['idx'] == st.session_state.selected_example - 1].iloc[0]
         if len(file_choice) == 2:
             row_compare = df_compare[df_compare['idx'] == st.session_state.selected_example - 1].iloc[0]
-    elif file_type == "SFT Results":
+    elif file_type == "Results":
         row = df[df['id'] == st.session_state.selected_example - 1].iloc[0]
         if len(file_choice) == 2:
             row_compare = df_compare[df_compare['id'] == st.session_state.selected_example - 1].iloc[0]
@@ -257,7 +260,7 @@ def visualize_prm_800k():
         elif len(file_choice) == 1:
             show_long_cot(row, file_choice[0])
     
-    elif file_type == "SFT Results":
+    elif file_type == "Results":
         
         def show_pred_result(row, model_name):
             if row['result']:
