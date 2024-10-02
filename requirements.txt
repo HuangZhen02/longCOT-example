@@ -3,3 +3,4 @@ chardet
 networkx
 matplotlib
 pygraphviz
+graphviz

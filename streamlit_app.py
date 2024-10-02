@@ -5,6 +5,7 @@ import re
 from utils import *
 from prm_800k import visualize_prm_800k
 from teacher_student import visualize_teacher_student
+from teacher_only import visualize_teacher_only
 
 
 st.set_page_config(layout="wide")
@@ -19,4 +20,4 @@ elif tree_type == "Teacher-student-based":
     visualize_teacher_student()
     
 elif tree_type == "Teacher-only-based":
-    st.header("To be done!")
+    visualize_teacher_only()
