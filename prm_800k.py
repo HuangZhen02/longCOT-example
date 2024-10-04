@@ -30,6 +30,18 @@ def display_baseline(result_dir):
     st.dataframe(accuracy_df)
         
         
+def get_common_rows(df1, df2):
+    common_idx = pd.merge(df1[['idx']], df2[['idx']], on='idx').sort_values(by='idx')
+
+    new_df1 = df1[df1['idx'].isin(common_idx['idx'])].set_index('idx')
+    new_df2 = df2[df2['idx'].isin(common_idx['idx'])].set_index('idx')
+
+    new_df1 = new_df1.loc[common_idx['idx']].reset_index()
+    new_df2 = new_df2.loc[common_idx['idx']].reset_index()
+
+    return new_df1, new_df2
+    
+    
 def filter_correct_problems_1(df):
     correctness = st.selectbox("Select correctness", ["None", "✅", "❌"])
     
@@ -131,6 +143,7 @@ def visualize_prm_800k():
         elif len(file_choice) == 2:
             df = load_data(os.path.join(folder_path, f'{file_choice[0]}.json'))
             df_compare = load_data(os.path.join(folder_path, f'{file_choice[1]}.json'))
+            df, df_compare = get_common_rows(df, df_compare)
         else:
             st.warning("Please select at least 1 file to continue.")
             st.stop()
