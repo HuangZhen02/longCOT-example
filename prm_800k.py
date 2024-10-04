@@ -175,8 +175,8 @@ def visualize_prm_800k():
 
     # Create a dictionary to hold examples by difficulty level
     difficulty_levels = {1: [], 2: [], 3: [], 4: [], 5: []}
-    for index, row in df.iterrows():
-        difficulty_levels[row['level']].append(index + 1)
+    for _, row in df.iterrows():
+        difficulty_levels[row['level']].append(row["idx"] + 1)
         
     st.subheader(f"Select Example **(Count: {count_after_filter}/{count_total})**")
     difficulty, example = st.columns(2)
