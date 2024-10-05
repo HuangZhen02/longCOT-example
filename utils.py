@@ -109,17 +109,3 @@ def visualize_tree(solution):
     draw_tree(G)  # 可视化树
     return levels_dict
 
-
-# def collect_steps_by_level(node, level=0, level_dict=None):
-#     if level_dict is None:
-#         level_dict = {}
-
-#     if level not in level_dict:
-#         level_dict[level] = []
-
-#     level_dict[level].append(node)
-
-#     for child in node.get('children', []):
-#         collect_steps_by_level(child, level + 1, level_dict)
-
-#     return level_dict
