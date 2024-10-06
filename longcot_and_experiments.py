@@ -130,31 +130,31 @@ class Filter:
 def load_tree(file_choice):
     if len(file_choice) == 1:
         if file_choice[0].startswith("prm800k"):
-            tree_path = f"./data/tree2longcot/prm800k_tree_678.json"
+            tree_path = f"./data/longcot&experiments/prm800k_tree_678.json"
         elif file_choice[0].startswith("policy"):
-            tree_path = f"./data/tree2longcot/policy_tree_678.json"
+            tree_path = f"./data/longcot&experiments/policy_tree_678.json"
         return read_json(tree_path)
     elif len(file_choice) == 2:
         if file_choice[0].startswith("prm800k") and file_choice[1].startswith("prm800k"):
-            tree_path = f"./data/tree2longcot/prm800k_tree_678.json"
+            tree_path = f"./data/longcot&experiments/prm800k_tree_678.json"
             return read_json(tree_path)
         elif file_choice[0].startswith("policy") and file_choice[1].startswith("policy"):
-            tree_path = f"./data/tree2longcot/policy_tree_678.json"
+            tree_path = f"./data/longcot&experiments/policy_tree_678.json"
             return read_json(tree_path)
         else:
             return None
             
 
-def visualize_tree2longcot():
+def visualize_longcot_and_experiments():
     # Load the data based on user choice
     
     file_type = st.sidebar.selectbox("Choose File Type", ["Synthetic longCoT", "Results"])
     
     if file_type == "Synthetic longCoT":
         
-        folder_path = "./data/tree2longcot/longcot"
+        folder_path = "./data/longcot&experiments/longcot"
         
-        file_choice = st.multiselect("Choose 1 or 2 Files", [os.path.splitext(file)[0] for file in os.listdir(folder_path) if file.endswith('.json')], max_selections=2)
+        file_choice = st.multiselect("Choose 1 or 2 Files", sorted([os.path.splitext(file)[0] for file in os.listdir(folder_path) if file.endswith('.json')]), max_selections=2)
         
         if len(file_choice) == 1:    
             df = load_data(os.path.join(folder_path, f'{file_choice[0]}.json'))
@@ -173,12 +173,12 @@ def visualize_tree2longcot():
         
         
     elif file_type == "Results":
-        folder_path = './data/tree2longcot/results'
+        folder_path = './data/longcot&experiments/results'
         show_baseline = st.checkbox("Show Baseline")
         if show_baseline:
             display_baseline(folder_path)
                 
-        file_choice = st.multiselect("Choose 1 or 2 Files", [os.path.splitext(file)[0] for file in os.listdir(folder_path) if file.endswith('.jsonl')], max_selections=2)
+        file_choice = st.multiselect("Choose 1 or 2 Files", sorted([os.path.splitext(file)[0] for file in os.listdir(folder_path) if file.endswith('.jsonl')]), max_selections=2)
         
         st.subheader('Filtering ("None" means no filtering)')
         
