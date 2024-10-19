@@ -6,12 +6,12 @@ from utils import *
 from longcot_and_experiments import visualize_longcot_and_experiments
 from teacher_student import visualize_teacher_student
 from teacher_only import visualize_teacher_only
-
+from dpo import visualize_dpo
 
 st.set_page_config(layout="wide")
 
 # choose the type of tree
-tree_type = st.sidebar.selectbox("Choose Tree Type", ["longcot&experiments", "Teacher-student-based(3 Examples)", "Teacher-only-based(10 Examples)"])
+tree_type = st.sidebar.selectbox("Choose Type", ["longcot&experiments", "Teacher-student-based(3 Examples)", "Teacher-only-based(10 Examples)", "DPO"])
 
 
 if tree_type == "longcot&experiments":
@@ -22,3 +22,6 @@ elif tree_type == "Teacher-student-based(3 Examples)":
     
 elif tree_type == "Teacher-only-based(10 Examples)":
     visualize_teacher_only()
+    
+elif tree_type == "DPO":
+    visualize_dpo()
