@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import re
 from utils import *
-
+import tiktoken
 
 correctness_map = {
     "✅": True,
@@ -15,6 +15,13 @@ def calculate_overall_accuracy(df):
     correct_count = df['result'].sum()
     overall_count = len(df)
     return correct_count / overall_count if overall_count > 0 else 0
+
+
+# def calculate_token(text):
+#     enc = 
+
+
+
 
 def display_baseline(result_dir):
     accuracy_list = []
@@ -79,70 +86,6 @@ class Filter:
         filtered_df2 = df2.loc[matching_indices]
         
         return filtered_df1, filtered_df2
-
-
-    def filter_wait_statement_1(df, key="response"):
-        wait_flag = st.selectbox("Whether there is a wait statement", ["None", "✅", "❌"])
-        
-        if wait_flag == "None":
-            return df
-        
-        matching_indices = []
-        for idx in df.index:
-            if ("wait," in df.at[idx, key].lower()) == correctness_map[wait_flag]:
-                matching_indices.append(idx)
-        filtered_df = df.loc[matching_indices]
-        return filtered_df
-        
-    def filter_wait_statement_2(df1, df2, key="response"):
-        left, right = st.columns(2)
-        with left:
-            wait_flag1 = st.selectbox("Whether there is a wait statement in the first file", ["None", "✅", "❌"])
-        with right:
-            wait_flag2 = st.selectbox("Whether there is a wait statement in the second file", ["None", "✅", "❌"])
-            
-        matching_indices = []
-        
-        for idx in df1.index:
-            assert df1.at[idx, 'id'] == df2.at[idx, 'id']
-            
-            response1 = df1.at[idx, key].lower()
-            response2 = df2.at[idx, key].lower()
-            
-            has_wait1 = "wait," in response1
-            has_wait2 = "wait," in response2
-
-            flag1 = correctness_map[wait_flag1]
-            flag2 = correctness_map[wait_flag2]
-
-            is_valid1 = (flag1 == "None" or has_wait1 == flag1)
-            is_valid2 = (flag2 == "None" or has_wait2 == flag2)
-            
-            if is_valid1 and is_valid2:
-                matching_indices.append(idx)
-        
-        filtered_df1 = df1.loc[matching_indices]
-        filtered_df2 = df2.loc[matching_indices]
-        
-        return filtered_df1, filtered_df2
-            
-
-def load_tree(file_choice):
-    if len(file_choice) == 1:
-        if file_choice[0].startswith("prm800k"):
-            tree_path = f"./data/longcot&experiments/prm800k_tree_678.json"
-        elif file_choice[0].startswith("policy"):
-            tree_path = f"./data/longcot&experiments/policy_tree_678.json"
-        return read_json(tree_path)
-    elif len(file_choice) == 2:
-        if file_choice[0].startswith("prm800k") and file_choice[1].startswith("prm800k"):
-            tree_path = f"./data/longcot&experiments/prm800k_tree_678.json"
-            return read_json(tree_path)
-        elif file_choice[0].startswith("policy") and file_choice[1].startswith("policy"):
-            tree_path = f"./data/longcot&experiments/policy_tree_678.json"
-            return read_json(tree_path)
-        else:
-            return None
             
 
 def visualize_dpo():
@@ -219,9 +162,7 @@ def visualize_dpo():
     st.subheader("Question")
     st.markdown(row['question'].replace("\n", "<br>"), unsafe_allow_html=True)
     
-    # st.subheader("Gold Solution")
-    # st.markdown(row['gt_solution'].replace("\n", "<br>"), unsafe_allow_html=True)
-            
+
     if file_type == "Results":
         
         def show_pred_result(row, model_name):
