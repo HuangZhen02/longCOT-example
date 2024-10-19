@@ -5,7 +5,7 @@ import re
 from utils import *
 import tiktoken
 
-KEY_WORDS = ["verify", "check", "identify", "summarize", "note that", "notice that", "recall that"]
+KEY_WORDS = ["verify", "check", "identify", "summarize", "note that", "notice that", "recall that", "wait"]
 
 enc = tiktoken.encoding_for_model("gpt-4o")
 
