@@ -5,6 +5,11 @@ import re
 from utils import *
 import tiktoken
 
+KEY_WORDS = ["verify", "check", "identify", "summarize", "note that", "notice that", "recall that"]
+
+enc = tiktoken.encoding_for_model("gpt-4o")
+
+
 correctness_map = {
     "✅": True,
     "❌": False,
@@ -17,10 +22,36 @@ def calculate_overall_accuracy(df):
     return correct_count / overall_count if overall_count > 0 else 0
 
 
-# def calculate_token(text):
-#     enc = 
+def calculate_token(df):
+    total_token_count = 0
+    total_problem_count = 0
+    
+    for _, row in df.iterrows():
+        text = row['response']
+        total_token_count += len(enc.encode(text))
+        total_problem_count += 1
+    
+    st.subheader(f"Average Token:{total_token_count/total_problem_count}")
+    
 
+def statistics_key_words(df):
+    key_word_count = {}
+    for key_word in KEY_WORDS:
+        for _, row in df.iterrows():
+            if key_word in row['response'].lower():
+                if key_word not in key_word_count:
+                    key_word_count[key_word] = 0
+                key_word_count[key_word] += 1
+                
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.bar(key_word_count.keys(), key_word_count.values())
+    ax.set_xlabel('Key Words')
+    ax.set_ylabel('Count')
+    ax.set_title('Keyword Occurrences')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
 
+    st.pyplot(fig)
 
 
 def display_baseline(result_dir):
@@ -128,8 +159,6 @@ def visualize_dpo():
     if 'selected_example' not in st.session_state:
         st.session_state.selected_example = 1
 
-    # Create a dictionary to hold examples by difficulty level
-    difficulty_levels = {1: [], 2: [], 3: [], 4: [], 5: []}
     examples = []
     for _, row in df.iterrows():
         try:    
@@ -155,6 +184,19 @@ def visualize_dpo():
         if len(file_choice) == 2:
             row_compare = df_compare[df_compare['id'] == st.session_state.selected_example].iloc[0]
         
+    def show_statistics(df):
+        st.subheader("Statistics")
+        calculate_token(df)
+        statistics_key_words(df)
+    
+    if len(file_choice) == 1:
+        show_statistics(df)
+    elif len(file_choice) == 2:
+        left, right = st.columns(2)
+        with left:
+            show_statistics(df)
+        with right:
+            show_statistics(df_compare)
         
 
     st.header(f"Idx: {st.session_state.selected_example}")
@@ -170,7 +212,9 @@ def visualize_dpo():
                 st.subheader(f"Pred of {model_name} ✅")
             else:
                 st.subheader(f"Pred of {model_name} ❌")
-                
+            
+            st.subheader(f"Token: {len(enc.encode(row['response']))}")
+            
             response = row['response'].replace("\n", "<br>")
             st.markdown(response, unsafe_allow_html=True)
             
