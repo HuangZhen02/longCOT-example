@@ -35,6 +35,12 @@ def write_json(data, file_path):
 def highlight_wait(text):
     return re.sub(r'(Wait,)', r'<span style="color: red; font-weight: bold;">\1</span>', text)
 
+def highlight_key_words(text, key_words):
+    for key_word in key_words:
+        text = re.sub(rf'({re.escape(key_word)})', r'<span style="color: red; font-weight: bold;">\1</span>', text, flags=re.IGNORECASE)
+    return text
+
+
 
 def add_edges(graph, data, level_dict=None, level=0, parent=None):
     # Initialize level_dict if not passed

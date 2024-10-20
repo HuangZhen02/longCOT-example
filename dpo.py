@@ -16,6 +16,7 @@ correctness_map = {
     "None": "None"
 }
 
+
 def calculate_overall_accuracy(df):
     correct_count = df['result'].sum()
     overall_count = len(df)
@@ -37,6 +38,8 @@ def calculate_token(df):
 def statistics_key_words(df):
     key_word_count = {}
     for key_word in KEY_WORDS:
+        key_word_count[key_word] = 0
+    for key_word in KEY_WORDS:
         for _, row in df.iterrows():
             if key_word in row['response'].lower():
                 if key_word not in key_word_count:
@@ -44,12 +47,18 @@ def statistics_key_words(df):
                 key_word_count[key_word] += 1
                 
     fig, ax = plt.subplots(figsize=(10, 6))
+    bars = ax.bar(key_word_count.keys(), key_word_count.values())
     ax.bar(key_word_count.keys(), key_word_count.values())
     ax.set_xlabel('Key Words')
     ax.set_ylabel('Count')
     ax.set_title('Keyword Occurrences')
     plt.xticks(rotation=45, ha='right')
     plt.tight_layout()
+    
+    for bar in bars:
+        height = bar.get_height()
+        ax.text(bar.get_x() + bar.get_width()/2., height,
+                f'{int(height)}', ha='center', va='bottom')
 
     st.pyplot(fig)
 
@@ -216,7 +225,7 @@ def visualize_dpo():
             st.subheader(f"Token: {len(enc.encode(row['response']))}")
             
             response = row['response'].replace("\n", "<br>")
-            st.markdown(response, unsafe_allow_html=True)
+            st.markdown(highlight_key_words(response, KEY_WORDS), unsafe_allow_html=True)
             
         st.subheader("Model's Prediction")
         
