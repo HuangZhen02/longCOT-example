@@ -192,8 +192,20 @@ def visualize_policy_model():
 
     st.header(f"Idx: {st.session_state.selected_example}")
 
+    # st.subheader("Question")
+    # st.markdown(row['question'].replace("\n", "<br>"), unsafe_allow_html=True)
+    
     st.subheader("Question")
-    st.markdown(row['question'].replace("\n", "<br>"), unsafe_allow_html=True)
+    if len(file_choice) == 2:
+        left, right = st.columns(2)
+        with left:
+            st.markdown(row['question'].replace("\n", "<br>"), unsafe_allow_html=True)
+        with right:
+            st.markdown(row_compare['question'].replace("\n", "<br>"), unsafe_allow_html=True)
+    else:
+        st.markdown(row['question'].replace("\n", "<br>"), unsafe_allow_html=True)
+
+
     
 
     if file_type == "Results":
@@ -207,9 +219,9 @@ def visualize_policy_model():
         
         if len(file_choice) == 2:
             left, right = st.columns(2)
-            with left.container(height=800):
+            with left.container():
                 show_pred_result(row, file_choice[0])
-            with right.container(height=800):
+            with right.container():
                 show_pred_result(row_compare, file_choice[1])
         
         elif len(file_choice) == 1:
