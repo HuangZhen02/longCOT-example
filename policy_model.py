@@ -201,7 +201,7 @@ def visualize_policy_model():
             st.subheader(f"Token: {len(enc.encode(row['response']))}")
             
             response = row['response'].replace("\n", "<br>")
-            st.markdown(highlight_key_words(response, KEY_WORDS), unsafe_allow_html=True)
+            render_markdown_with_mathjax(highlight_key_words(response, KEY_WORDS))
             
         st.subheader("Response")
         

@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import json
 import os
@@ -31,6 +32,27 @@ def write_json(data, file_path):
     with open(file_path, 'w', encoding='utf-8', errors="ignore") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
         
+
+def render_markdown_with_mathjax(markdown_text):
+    """
+    渲染带有MathJax支持的Markdown文本，使用st.components.v1.html。
+    
+    Args:
+        markdown_text (str): 需要渲染的Markdown字符串。
+    """
+    # HTML 模板，包含 MathJax 脚本和输入的 Markdown 内容
+    html_template = f"""
+    <script type="text/javascript" async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js">
+    </script>
+    <div style="font-size: 16px; line-height: 1.6; margin: 10px 0;">
+      {markdown_text}
+    </div>
+    """
+    
+    # 使用 st.components.v1.html 渲染 HTML 内容
+    components.html(html_template, height=800, scrolling=True)
+
 
 def highlight_wait(text):
     return re.sub(r'(Wait,)', r'<span style="color: red; font-weight: bold;">\1</span>', text)

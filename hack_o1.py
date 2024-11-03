@@ -210,4 +210,7 @@ def visualize_hack_o1():
     st.subheader(f"Token: {len(enc.encode(row['response']))}")
     
     response = row['response'].replace("\n", "<br>")
-    st.markdown(highlight_key_words(response, KEY_WORDS), unsafe_allow_html=True)
+    # st.markdown(highlight_key_words(response, KEY_WORDS), unsafe_allow_html=True)
+    
+    render_markdown_with_mathjax(response)
+    
