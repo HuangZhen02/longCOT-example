@@ -131,13 +131,6 @@ def visualize_hack_o1():
         if len(file_choice) == 1:
             df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
             count_total = len(df)
-            df = Filter.filter_correct_problems_1(df)
-
-        elif len(file_choice) == 2:
-            df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
-            count_total = len(df)
-            df_compare = load_data(os.path.join(folder_path, f'{file_choice[1]}.jsonl'))
-            df, df_compare = Filter.filter_correct_problems_2(df, df_compare)
 
         else:
             st.warning("Please select at least 1 file to continue.")
