@@ -14,19 +14,19 @@ from jl import visualize_jl
 st.set_page_config(layout="wide")
 
 # choose the type of tree
-tree_type = st.sidebar.selectbox("Choose Type", ["longcot&experiments", "DPO", "hack o1", "policy model", "journey learning"])
+tree_type = st.sidebar.selectbox("Choose Type", ["hack o1 data", "policy model data", "journey learning"])
 
 
-if tree_type == "longcot&experiments":
-    visualize_longcot_and_experiments()
+# if tree_type == "longcot&experiments":
+#     visualize_longcot_and_experiments()
 
-elif tree_type == "DPO":
-    visualize_dpo()
+# elif tree_type == "DPO":
+#     visualize_dpo()
     
-elif tree_type == "hack o1":
+if tree_type == "hack o1 data":
     visualize_hack_o1()
     
-elif tree_type == "policy model":
+elif tree_type == "policy model data":
     visualize_policy_model()
 
 elif tree_type == "journey learning":

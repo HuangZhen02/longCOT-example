@@ -16,6 +16,15 @@ correctness_map = {
     "None": "None"
 }
 
+def fix_df_key(df):
+    # Iterate over each row in the DataFrame
+    for idx, row in df.iterrows():
+        # Check if 'generated_responses' has at least one element
+        if 'generated_responses' in row and isinstance(row['generated_responses'], list) and len(row['generated_responses']) > 0:
+            # Replace the first element with 'solution'
+            df.at[idx, 'solution'] = row['generated_responses'][0]
+    
+    return df
 
 def calculate_overall_accuracy(df):
     correct_count = df['result'].sum()
@@ -28,7 +37,11 @@ def calculate_token(df):
     total_problem_count = 0
     
     for _, row in df.iterrows():
-        text = row['generated_responses'][0]
+        try:
+            text = row['generated_responses'][0]
+        except:
+            text = row["solution"]
+            
         total_token_count += len(enc.encode(text))
         total_problem_count += 1
     
@@ -41,7 +54,11 @@ def statistics_key_words(df):
         key_word_count[key_word] = 0
     for key_word in KEY_WORDS:
         for _, row in df.iterrows():
-            if key_word in row['generated_responses'][0].lower():
+            try:
+                text = row['generated_responses'][0].lower()
+            except:
+                text = row['solution'].lower()
+            if key_word in text:
                 if key_word not in key_word_count:
                     key_word_count[key_word] = 0
                 key_word_count[key_word] += 1
@@ -127,15 +144,89 @@ class Filter:
         
         return filtered_df1, filtered_df2
             
+                
+    def filter_jl_1(df):
+        if 'is_jl' in df.columns:
+            jl_filter = st.selectbox("Filter by 'is journey learning'", ["None", "True", "False"])
+            
+            if jl_filter == "True":
+                filtered_df = df[df['is_jl']]
+            elif jl_filter == "False":
+                filtered_df = df[~df['is_jl']]
+            else:  # "None"
+                return df
+
+            return filtered_df
+        # Return the DataFrame unchanged if 'is_jl' column does not exist
+        return df
+
+    def filter_jl_2(df1, df2):
+        left, right = st.columns(2)
+        with left:
+            jl_filter1 = st.selectbox("Filter by 'is journey learning' for the first file", ["None", "True", "False"])
+        with right:
+            jl_filter2 = st.selectbox("Filter by 'is journey learning' for the second file", ["None", "True", "False"])
+
+        has_is_jl_df1 = 'is_jl' in df1.columns
+        has_is_jl_df2 = 'is_jl' in df2.columns
+
+        if (has_is_jl_df1 and jl_filter1 != "None") or (has_is_jl_df2 and jl_filter2 != "None"):
+            if has_is_jl_df1 and jl_filter1 != "None":
+                filtered_df1 = df1[df1['is_jl']] if jl_filter1 == "True" else df1[~df1['is_jl']]
+            else:
+                filtered_df1 = df1
+
+            if has_is_jl_df2 and jl_filter2 != "None":
+                filtered_df2 = df2[df2['is_jl']] if jl_filter2 == "True" else df2[~df2['is_jl']]
+            else:
+                filtered_df2 = df2
+
+            # Ensure both DataFrames only keep rows with shared 'id' values
+            common_ids = set(filtered_df1['id']) & set(filtered_df2['id'])
+            filtered_df1 = filtered_df1[filtered_df1['id'].isin(common_ids)]
+            filtered_df2 = filtered_df2[filtered_df2['id'].isin(common_ids)]
+            
+            return filtered_df1, filtered_df2
+
+        # Return the original DataFrames unchanged if neither has 'is_jl' or no selection made
+        return df1, df2
+
+
 
 def visualize_jl():
     # Load the data based on user choice
     
-    file_type = st.sidebar.selectbox("Choose File Type", ["Results"])
+    file_type = st.sidebar.selectbox("Choose File Type", ["Training Data", "Results"])
+    
+    
+    if file_type == "Training Data":
+        folder_path = './data/jl/training_data'
+        
+        dataset = st.selectbox("Choose Dataset", ["Math", "AIME"])
+        folder_path = os.path.join(folder_path, dataset)
+        
+        file_choice = st.multiselect("Choose 1 or 2 Files", sorted([os.path.splitext(file)[0] for file in os.listdir(folder_path) if file.endswith('.jsonl')]), max_selections=2)
+        
+        if len(file_choice) == 1:
+            df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
+            count_total = len(df)
+            df = Filter.filter_jl_1(df)
+            df = fix_df_key(df)
+
+        elif len(file_choice) == 2:
+            df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
+            count_total = len(df)
+            df_compare = load_data(os.path.join(folder_path, f'{file_choice[1]}.jsonl'))
+            df, df_compare = Filter.filter_jl_2(df, df_compare)
+            df, df_compare = fix_df_key(df), fix_df_key(df_compare)
+
+        else:
+            st.warning("Please select at least 1 file to continue.")
+            st.stop()
     
         
-    if file_type == "Results":
-        folder_path = './data/jl'
+    elif file_type == "Results":
+        folder_path = './data/jl/results'
         
         benchmark = st.selectbox("Choose Benchmark", ["Math500", "AIME2024"])
         folder_path = os.path.join(folder_path, benchmark)
@@ -166,6 +257,7 @@ def visualize_jl():
             st.warning("Please select at least 1 file to continue.")
             st.stop()
             
+            
     count_after_filter = len(df)
             
     if df.empty:
@@ -192,15 +284,11 @@ def visualize_jl():
 
     st.session_state.selected_example = selected_example
     
-    
-    if file_type == "Synthetic longCoT":
-        row = df[df['idx'] == st.session_state.selected_example].iloc[0]
-        if len(file_choice) == 2:
-            row_compare = df_compare[df_compare['idx'] == st.session_state.selected_example].iloc[0]
-    elif file_type == "Results":
-        row = df[df['id'] == st.session_state.selected_example].iloc[0]
-        if len(file_choice) == 2:
-            row_compare = df_compare[df_compare['id'] == st.session_state.selected_example].iloc[0]
+
+    row = df[df['id'] == st.session_state.selected_example].iloc[0]
+    if len(file_choice) == 2:
+        row_compare = df_compare[df_compare['id'] == st.session_state.selected_example].iloc[0]
+        
         
     def show_statistics(df):
         st.subheader("Statistics")
@@ -225,8 +313,28 @@ def visualize_jl():
     st.subheader("Answer")
     st.markdown(row['gold_answer'].replace("\n", "<br>"), unsafe_allow_html=True)
 
-    if file_type == "Results":
+
+    if file_type == "Training Data":
+        def show_cot(row, data_name):
+            st.subheader(f"CoT of {data_name}")
+            st.subheader(f"Token: {len(enc.encode(row['solution']))}")
+            response = row['solution'].replace("\n", "<br>")
+            render_markdown_with_mathjax(highlight_key_words(response, KEY_WORDS))
+            
+        st.subheader("Training Data")
         
+        if len(file_choice) == 2:
+            left, right = st.columns(2)
+            with left:
+                show_cot(row, file_choice[0])
+            with right:
+                show_cot(row_compare, file_choice[1])
+        
+        elif len(file_choice) == 1:
+            show_cot(row, file_choice[0])
+
+
+    elif file_type == "Results":
         def show_pred_result(row, model_name):
             if row['answers_correctness'][0]:
                 st.subheader(f"Pred of {model_name} ✅")
