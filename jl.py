@@ -23,8 +23,22 @@ def fix_df_key(df):
         if 'generated_responses' in row and isinstance(row['generated_responses'], list) and len(row['generated_responses']) > 0:
             # Replace the first element with 'solution'
             df.at[idx, 'solution'] = row['generated_responses'][0]
+        
+        if "idx" in row:
+            df.at[idx, 'id'] = row["idx"]
     
     return df
+
+def get_common_rows(df1, df2):
+    # Find common 'id' values between the two DataFrames
+    common_ids = set(df1['id']).intersection(df2['id'])
+    
+    # Filter both DataFrames to keep only rows with common 'id' values
+    filtered_df1 = df1[df1['id'].isin(common_ids)]
+    filtered_df2 = df2[df2['id'].isin(common_ids)]
+    
+    return filtered_df1, filtered_df2
+
 
 def calculate_overall_accuracy(df):
     correct_count = df['result'].sum()
@@ -95,15 +109,14 @@ def display_baseline(result_dir):
         
         
 def get_common_rows(df1, df2):
-    common_idx = pd.merge(df1[['idx']], df2[['idx']], on='idx').sort_values(by='idx')
-
-    new_df1 = df1[df1['idx'].isin(common_idx['idx'])].set_index('idx')
-    new_df2 = df2[df2['idx'].isin(common_idx['idx'])].set_index('idx')
-
-    new_df1 = new_df1.loc[common_idx['idx']].reset_index()
-    new_df2 = new_df2.loc[common_idx['idx']].reset_index()
-
-    return new_df1, new_df2
+    # Find common 'id' values between the two DataFrames
+    common_ids = set(df1['id']).intersection(df2['id'])
+    
+    # Filter both DataFrames to keep only rows with common 'id' values
+    filtered_df1 = df1[df1['id'].isin(common_ids)]
+    filtered_df2 = df2[df2['id'].isin(common_ids)]
+    
+    return filtered_df1, filtered_df2
     
     
 class Filter:    
@@ -143,8 +156,58 @@ class Filter:
         filtered_df2 = df2.loc[matching_indices]
         
         return filtered_df1, filtered_df2
+    
+    
+    def filter_wait_statement_1(df, key="response"):
+        wait_flag = st.selectbox("Whether there is a wait statement", ["None", "✅", "❌"])
+        
+        if wait_flag == "None":
+            return df
+        
+        matching_indices = []
+        for idx, row in df.iterrows():
+            if ("wait," in row[key].lower()) == correctness_map[wait_flag]:
+                matching_indices.append(row['id'])
+        
+        filtered_df = df[df['id'].isin(matching_indices)]
+        return filtered_df
+
+    def filter_wait_statement_2(df1, df2, key="response"):
+        left, right = st.columns(2)
+        with left:
+            wait_flag1 = st.selectbox("Whether there is a wait statement in the first file", ["None", "✅", "❌"])
+        with right:
+            wait_flag2 = st.selectbox("Whether there is a wait statement in the second file", ["None", "✅", "❌"])
+        
+        matching_ids = []
+
+        for _, row1 in df1.iterrows():
+            # Find the row in df2 with the same 'id'
+            row2 = df2[df2['id'] == row1['id']]
+            if row2.empty:
+                continue
             
-                
+            response1 = row1[key].lower()
+            response2 = row2.iloc[0][key].lower()
+            
+            has_wait1 = "wait," in response1
+            has_wait2 = "wait," in response2
+            
+            flag1 = correctness_map[wait_flag1]
+            flag2 = correctness_map[wait_flag2]
+            
+            is_valid1 = (wait_flag1 == "None" or has_wait1 == flag1)
+            is_valid2 = (wait_flag2 == "None" or has_wait2 == flag2)
+            
+            if is_valid1 and is_valid2:
+                matching_ids.append(row1['id'])
+        
+        filtered_df1 = df1[df1['id'].isin(matching_ids)]
+        filtered_df2 = df2[df2['id'].isin(matching_ids)]
+        
+        return filtered_df1, filtered_df2  
+    
+                  
     def filter_jl_1(df):
         if 'is_jl' in df.columns:
             jl_filter = st.selectbox("Filter by 'is journey learning'", ["None", "True", "False"])
@@ -157,15 +220,29 @@ class Filter:
                 return df
 
             return filtered_df
-        # Return the DataFrame unchanged if 'is_jl' column does not exist
-        return df
+        else:
+            # Display a disabled selectbox indicating that filtering is not applicable
+            st.selectbox("Filter by 'is journey learning'", ["None"], index=0, disabled=True)
+            return df
 
     def filter_jl_2(df1, df2):
         left, right = st.columns(2)
-        with left:
-            jl_filter1 = st.selectbox("Filter by 'is journey learning' for the first file", ["None", "True", "False"])
-        with right:
-            jl_filter2 = st.selectbox("Filter by 'is journey learning' for the second file", ["None", "True", "False"])
+        
+        if 'is_jl' in df1.columns:
+            with left:
+                jl_filter1 = st.selectbox("Filter by 'is journey learning' for the first file", ["None", "True", "False"])
+        else:
+            with left:
+                st.selectbox("Filter by 'is journey learning' for the first file", ["None"], index=0, disabled=True)
+                jl_filter1 = "None"
+        
+        if 'is_jl' in df2.columns:
+            with right:
+                jl_filter2 = st.selectbox("Filter by 'is journey learning' for the second file", ["None", "True", "False"])
+        else:
+            with right:
+                st.selectbox("Filter by 'is journey learning' for the second file", ["None"], index=0, disabled=True)
+                jl_filter2 = "None"
 
         has_is_jl_df1 = 'is_jl' in df1.columns
         has_is_jl_df2 = 'is_jl' in df2.columns
@@ -202,23 +279,28 @@ def visualize_jl():
     if file_type == "Training Data":
         folder_path = './data/jl/training_data'
         
-        dataset = st.selectbox("Choose Dataset", ["Math", "AIME"])
+        dataset = st.selectbox("Choose Dataset", ["Math"])
         folder_path = os.path.join(folder_path, dataset)
         
         file_choice = st.multiselect("Choose 1 or 2 Files", sorted([os.path.splitext(file)[0] for file in os.listdir(folder_path) if file.endswith('.jsonl')]), max_selections=2)
         
         if len(file_choice) == 1:
             df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
+            df = fix_df_key(df)
             count_total = len(df)
             df = Filter.filter_jl_1(df)
-            df = fix_df_key(df)
+            df = Filter.filter_wait_statement_1(df, key="solution")
+
 
         elif len(file_choice) == 2:
             df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
             count_total = len(df)
             df_compare = load_data(os.path.join(folder_path, f'{file_choice[1]}.jsonl'))
-            df, df_compare = Filter.filter_jl_2(df, df_compare)
             df, df_compare = fix_df_key(df), fix_df_key(df_compare)
+            df, df_compare = get_common_rows(df, df_compare)
+            df, df_compare = Filter.filter_jl_2(df, df_compare)
+            df, df_compare = Filter.filter_wait_statement_2(df, df_compare, key="solution")
+
 
         else:
             st.warning("Please select at least 1 file to continue.")
@@ -241,17 +323,21 @@ def visualize_jl():
         
         if len(file_choice) == 1:
             df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
+            df = fix_df_key(df)
             df["id"] = range(1, len(df) + 1)
             count_total = len(df)
             df = Filter.filter_correct_problems_1(df)
+            df = Filter.filter_wait_statement_1(df, key="solution")
 
         elif len(file_choice) == 2:
             df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
-            df["id"] = range(1, len(df) + 1)
             count_total = len(df)
             df_compare = load_data(os.path.join(folder_path, f'{file_choice[1]}.jsonl'))
+            df, df_compare = fix_df_key(df), fix_df_key(df_compare)
+            df["id"] = range(1, len(df) + 1)
             df_compare["id"] = range(1, len(df_compare) + 1)
             df, df_compare = Filter.filter_correct_problems_2(df, df_compare)
+            df, df_compare = Filter.filter_wait_statement_2(df, df_compare, key="solution")
 
         else:
             st.warning("Please select at least 1 file to continue.")
@@ -310,8 +396,9 @@ def visualize_jl():
     st.subheader("Question")
     st.markdown(row['question'].replace("\n", "<br>"), unsafe_allow_html=True)
     
-    st.subheader("Answer")
-    st.markdown(row['gold_answer'].replace("\n", "<br>"), unsafe_allow_html=True)
+    if "gold_answer" in row:
+        st.subheader("Answer")
+        st.markdown(row['gold_answer'].replace("\n", "<br>"), unsafe_allow_html=True)
 
 
     if file_type == "Training Data":
@@ -341,9 +428,9 @@ def visualize_jl():
             else:
                 st.subheader(f"Pred of {model_name} ❌")
             
-            st.subheader(f"Token: {len(enc.encode(row['generated_responses'][0]))}")
+            st.subheader(f"Token: {len(enc.encode(row['solution']))}")
             
-            response = row['generated_responses'][0].replace("\n", "<br>")
+            response = row['solution'].replace("\n", "<br>")
             render_markdown_with_mathjax(highlight_key_words(response, KEY_WORDS))
             
         st.subheader("Model's Prediction")
