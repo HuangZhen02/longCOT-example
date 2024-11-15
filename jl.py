@@ -5,7 +5,7 @@ import re
 from utils import *
 import tiktoken
 
-KEY_WORDS = ["verify", "check", "identify", "summarize", "note that", "notice that", "recall that", "wait"]
+KEY_WORDS = ["verify", "check", "identify", "summarize", "note that", "notice that", "recall that", "wait", "realize"]
 
 enc = tiktoken.encoding_for_model("gpt-4o")
 
@@ -158,26 +158,26 @@ class Filter:
         return filtered_df1, filtered_df2
     
     
-    def filter_wait_statement_1(df, key="response"):
-        wait_flag = st.selectbox("Whether there is a wait statement", ["None", "✅", "❌"])
+    def filter_word_statement_1(word, df, key="response"):
+        wait_flag = st.selectbox(f"Whether there is a {word} statement", ["None", "✅", "❌"])
         
         if wait_flag == "None":
             return df
         
         matching_indices = []
         for idx, row in df.iterrows():
-            if ("wait," in row[key].lower()) == correctness_map[wait_flag]:
+            if (word in row[key].lower()) == correctness_map[wait_flag]:
                 matching_indices.append(row['id'])
         
         filtered_df = df[df['id'].isin(matching_indices)]
         return filtered_df
 
-    def filter_wait_statement_2(df1, df2, key="response"):
+    def filter_word_statement_2(word, df1, df2, key="response"):
         left, right = st.columns(2)
         with left:
-            wait_flag1 = st.selectbox("Whether there is a wait statement in the first file", ["None", "✅", "❌"])
+            wait_flag1 = st.selectbox(f"Whether there is a {word} statement in the first file", ["None", "✅", "❌"])
         with right:
-            wait_flag2 = st.selectbox("Whether there is a wait statement in the second file", ["None", "✅", "❌"])
+            wait_flag2 = st.selectbox(f"Whether there is a {word} statement in the second file", ["None", "✅", "❌"])
         
         matching_ids = []
 
@@ -190,8 +190,8 @@ class Filter:
             response1 = row1[key].lower()
             response2 = row2.iloc[0][key].lower()
             
-            has_wait1 = "wait," in response1
-            has_wait2 = "wait," in response2
+            has_wait1 = word in response1
+            has_wait2 = word in response2
             
             flag1 = correctness_map[wait_flag1]
             flag2 = correctness_map[wait_flag2]
@@ -289,7 +289,8 @@ def visualize_jl():
             df = fix_df_key(df)
             count_total = len(df)
             df = Filter.filter_jl_1(df)
-            df = Filter.filter_wait_statement_1(df, key="solution")
+            df = Filter.filter_word_statement_1("wait,", df, key="solution")
+            df = Filter.filter_word_statement_1("realize", df, key="solution")
 
 
         elif len(file_choice) == 2:
@@ -299,7 +300,8 @@ def visualize_jl():
             df, df_compare = fix_df_key(df), fix_df_key(df_compare)
             df, df_compare = get_common_rows(df, df_compare)
             df, df_compare = Filter.filter_jl_2(df, df_compare)
-            df, df_compare = Filter.filter_wait_statement_2(df, df_compare, key="solution")
+            df, df_compare = Filter.filter_word_statement_2("wait,", df, df_compare, key="solution")
+            df, df_compare = Filter.filter_word_statement_2("realize", df, df_compare, key="solution")
 
 
         else:
@@ -327,7 +329,8 @@ def visualize_jl():
             df["id"] = range(1, len(df) + 1)
             count_total = len(df)
             df = Filter.filter_correct_problems_1(df)
-            df = Filter.filter_wait_statement_1(df, key="solution")
+            df = Filter.filter_word_statement_1("wait,", df, key="solution")
+            df = Filter.filter_word_statement_1("realize", df, key="solution")
 
         elif len(file_choice) == 2:
             df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
@@ -337,7 +340,8 @@ def visualize_jl():
             df["id"] = range(1, len(df) + 1)
             df_compare["id"] = range(1, len(df_compare) + 1)
             df, df_compare = Filter.filter_correct_problems_2(df, df_compare)
-            df, df_compare = Filter.filter_wait_statement_2(df, df_compare, key="solution")
+            df, df_compare = Filter.filter_word_statement_2("wait,", df, df_compare, key="solution")
+            df, df_compare = Filter.filter_word_statement_2("realize", df, df_compare, key="solution")
 
         else:
             st.warning("Please select at least 1 file to continue.")
