@@ -242,11 +242,12 @@ def visualize_hack_o1():
         
         if len(file_choice) == 1:
             df = load_data(os.path.join(folder_path, f'{file_choice[0]}.jsonl'))
-            df = Filter.filter_word_statement_1("wait", df, key="solution")
             count_total = len(df)
+            df = Filter.filter_word_statement_1("wait", df, key="response")
+            
 
         else:
-            st.warning("Please select at least 1 file to continue.")
+            st.warning("Please select 1 file to continue.")
             st.stop()
             
     count_after_filter = len(df)
@@ -318,5 +319,5 @@ def visualize_hack_o1():
     response = row['response'].replace("\n", "<br>")
     # st.markdown(highlight_key_words(response, KEY_WORDS), unsafe_allow_html=True)
     
-    render_markdown_with_mathjax(response)
+    render_markdown_with_mathjax(highlight_key_words(response, KEY_WORDS))
     
