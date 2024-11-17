@@ -279,7 +279,7 @@ def visualize_jl():
     if file_type == "Training Data":
         folder_path = './data/jl/training_data'
         
-        dataset = st.selectbox("Choose Dataset", ["Math"])
+        dataset = st.selectbox("Choose Dataset", ["Math", "AIME"])
         folder_path = os.path.join(folder_path, dataset)
         
         file_choice = st.multiselect("Choose 1 or 2 Files", sorted([os.path.splitext(file)[0] for file in os.listdir(folder_path) if file.endswith('.jsonl')]), max_selections=2)
