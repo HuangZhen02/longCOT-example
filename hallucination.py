@@ -9,9 +9,9 @@ import tiktoken
 
 def visualize_hallucination():
 
-    before_sft_data_path = "/Users/huangzhen/VscodeProject/O1/longCOT-example/data/hallucination/output_before-sft_extracted.jsonl"
+    before_sft_data_path = "./data/hallucination/output_before-sft_extracted.jsonl"
 
-    after_sft_data_path = "/Users/huangzhen/VscodeProject/O1/longCOT-example/data/hallucination/output_after-sft_extracted.jsonl"
+    after_sft_data_path = "./data/hallucination/output_after-sft_extracted.jsonl"
 
     before_sft_data = []
     with open(before_sft_data_path, 'r') as f:
