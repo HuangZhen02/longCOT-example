@@ -11,13 +11,13 @@ from hack_o1 import visualize_hack_o1
 from policy_model import visualize_policy_model
 from jl import visualize_jl
 from hallucination import visualize_hallucination
-
+from safety import visualize_safety
 
 
 st.set_page_config(layout="wide")
 
 # choose the type of tree
-tree_type = st.sidebar.selectbox("Choose Type", ["hack o1 data", "policy model data", "journey learning", "hallucination"])
+tree_type = st.sidebar.selectbox("Choose Type", ["hack o1 data", "policy model data", "journey learning", "hallucination", "safety"])
 
 
 # if tree_type == "longcot&experiments":
@@ -37,3 +37,6 @@ elif tree_type == "journey learning":
 
 elif tree_type == "hallucination":
     visualize_hallucination()
+    
+elif tree_type == "safety":
+    visualize_safety()
