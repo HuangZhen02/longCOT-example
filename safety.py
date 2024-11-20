@@ -8,8 +8,8 @@ import tiktoken
 
 def visualize_safety():
     # 数据文件路径
-    before_sft_data_path = "./data/safety/safety_prompt-and-response_before-sft_and_labels.json"
-    after_sft_data_path = "./data/safety/safety_prompt-and-response_after-sft_and_labels.json"
+    before_sft_data_path = "./data/safety/safety_prompt_600-and-response_before-sft_and_labels.json"
+    after_sft_data_path = "./data/safety/safety_prompt_600-and-response_after-sft_and_labels.json"
 
     # 加载数据
     with open(before_sft_data_path, "r") as f:
