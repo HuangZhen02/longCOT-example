@@ -9,7 +9,7 @@ import tiktoken
 
 def visualize_hallucination():
     
-    mode = st.selectbox("Select a mode", ["1: output", "2: combined_o1"])
+    mode = st.selectbox("Select a mode", ["1: output", "2: combined_o1_hallucination", "3: combined_o1_simple_qa_hallucination"])
     
     if mode == "1: output":
 
@@ -63,7 +63,7 @@ def visualize_hallucination():
             st.header("Answer:")
             st.markdown(after_sft["model_answer"])
             
-    elif mode == "2: combined_o1":
+    elif mode == "2: combined_o1_hallucination":
         with open("./data/hallucination/combined_o1_hallucination.jsonl", 'r') as f:
             data = []
             for idx, line in enumerate(f):
@@ -116,3 +116,43 @@ def visualize_hallucination():
             st.markdown(selected_example["output_after_sft"])
             st.subheader("Answer:")
             st.markdown(selected_example["model_answer_after_sft"])
+            
+    elif mode == "3: combined_o1_simple_qa_hallucination":
+        
+        with open("./data/hallucination/combined_o1_simple_qa_hallucination.jsonl", 'r') as f:
+            data = []
+            for idx, line in enumerate(f):
+                sample = json.loads(line)
+                sample["id"] = idx
+                data.append(sample)
+        
+        
+        select_id = st.selectbox("Select an example", [d["id"] for d in data])
+        
+        selected_example = next(d for d in data if d["id"] == select_id)
+        
+        st.header("Problem:")
+        st.markdown(selected_example["prompt"])
+        
+
+        
+        st.header("Gold Answer:")
+        st.markdown(selected_example["answer"])
+        
+        left, right = st.columns(2)
+        
+        with left.container(height=800):
+            st.header("Before SFT")
+            st.subheader("Output:")
+            st.markdown(selected_example["output_before_sft"])
+            st.subheader("Answer:")
+            st.markdown(selected_example["model_answer_before_sft"])
+            
+        with right.container(height=800):
+            st.header("After SFT")
+            st.subheader("Output:")
+            st.markdown(selected_example["output_after_sft"])
+            st.subheader("Answer:")
+            st.markdown(selected_example["model_answer_after_sft"])
+            
+        
