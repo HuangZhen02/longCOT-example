@@ -13,12 +13,13 @@ from jl import visualize_jl
 from hallucination import visualize_hallucination
 from safety import visualize_safety
 from lima import visualize_lima
+from math500 import visualize_math500
 
 
 st.set_page_config(layout="wide")
 
 # choose the type of tree
-tree_type = st.sidebar.selectbox("Choose Type", ["hack o1 data", "policy model data", "journey learning", "hallucination", "safety", "lima and autoJ"])
+tree_type = st.sidebar.selectbox("Choose Type", ["hack o1 data", "policy model data", "journey learning", "hallucination", "safety", "lima and autoJ", "math500"])
 
 
 # if tree_type == "longcot&experiments":
@@ -44,3 +45,6 @@ elif tree_type == "safety":
     
 elif tree_type == "lima and autoJ":
     visualize_lima()
+    
+elif tree_type == "math500":
+    visualize_math500()
