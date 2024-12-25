@@ -312,7 +312,7 @@ def visualize_jl():
     elif file_type == "Results":
         folder_path = './data/jl/results'
         
-        benchmark = st.selectbox("Choose Benchmark", ["Math500", "AIME2024"])
+        benchmark = st.selectbox("Choose Benchmark", ["Math500", "AIME2024", "LIMA"])
         folder_path = os.path.join(folder_path, benchmark)
         
         # show_baseline = st.checkbox("Show Baseline")
