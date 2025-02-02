@@ -5,17 +5,15 @@ import re
 from utils import *
 
 
-from jl import visualize_jl
+from limo import visualize_limo
 
 
 
 st.set_page_config(layout="wide")
 
 # choose the type of tree
-tree_type = st.sidebar.selectbox("Choose Type", ["journey learning"])
+tree_type = st.sidebar.selectbox("Choose Type", ["LIMO"])
 
 
-
-if tree_type == "journey learning":
-    visualize_jl()
-
+if tree_type == "LIMO":
+    visualize_limo()
